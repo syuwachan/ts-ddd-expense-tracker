@@ -1,19 +1,18 @@
-import { Money } from "../valueObjects/Money";
-import { DateValue } from "../valueObjects/DateValue";
-import { Category } from "../valueObjects/Category";
-import { Memo } from "../valueObjects/Memo";
+import { Money } from '../valueObjects/Money';
+import { DateValue } from '../valueObjects/DateValue';
+import { Category } from '../valueObjects/Category';
+import { Memo } from '../valueObjects/Memo';
+import { randomUUID } from 'crypto';
 
-export class Expense{
-
+export class Income{
 	constructor(
-		public readonly id: string,
+		public readonly id: string=randomUUID(),
 		private  _amount: Money,
 		private  _date: DateValue,
 		private  _category: Category,
 		private  _memo: Memo,
 	) {}
 
-	//getter
 	get amount(): Money {
 		return this._amount;
 	}
@@ -27,7 +26,6 @@ export class Expense{
 		return this._memo;
 	}
 
-	//state change methods
 	changeAmount(amount: Money): void {
 		this._amount = amount;
 	}
@@ -42,7 +40,16 @@ export class Expense{
 	}
 
 	describe(): string {
-		return `[${this._category.name}] ${this._amount.amount}円 - ${this._memo.content}`;
-	        }
+		return `[${this._category.name}] +${this._amount.amount}円 - ${this._memo.content}`;
+	}
 
+	toJSON() { 
+	return { 
+		id: this.id, 
+		amount: this._amount.amount, 
+		date: this._date.formatted, 
+		category: this._category.name, 
+		memo: this._memo.content, 
+	};
+	}
 }
