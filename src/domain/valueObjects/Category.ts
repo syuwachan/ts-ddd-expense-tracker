@@ -1,9 +1,18 @@
-export type CategoryType =
+export type ExpenseCategoryType =
   | "Food"
   | "Transport"
   | "Housing"
   | "Entertainment"
   | "Other";
+
+export type IncomeCategoryType =
+  | "Salary"
+  | "Bonus"
+  | "Investment"
+  | "Gift"
+  | "Other";
+
+export type CategoryType = ExpenseCategoryType | IncomeCategoryType;
 
 export class Category{
 	private readonly value:CategoryType;
@@ -23,7 +32,7 @@ export class Category{
 		return this.value === other.value;
 	}
 
-	static all(): Category[] {
+	static allExpense(): Category[] {
 		return [
 		  new Category("Food"),
 		  new Category("Transport"),
@@ -31,6 +40,20 @@ export class Category{
 		  new Category("Entertainment"),
 		  new Category("Other"),
 		];
+	}
+
+	static allIncome(): Category[] {
+		return [
+		  new Category("Salary"),
+		  new Category("Bonus"),
+		  new Category("Investment"),
+		  new Category("Gift"),
+		  new Category("Other"),
+		];
+	}
+
+	static all(): Category[] {
+		return [...Category.allExpense(), ...Category.allIncome()];
 	}
 
 }

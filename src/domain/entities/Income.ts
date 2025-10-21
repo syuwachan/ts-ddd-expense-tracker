@@ -1,8 +1,16 @@
 import { Money } from '../valueObjects/Money';
 import { DateValue } from '../valueObjects/DateValue';
-import { Category } from '../valueObjects/Category';
+import { Category, IncomeCategoryType } from '../valueObjects/Category';
 import { Memo } from '../valueObjects/Memo';
 import { randomUUID } from 'crypto';
+
+export interface IncomeData {
+	id: string;
+	amount: number;
+	date: string;
+	category: IncomeCategoryType;
+	memo: string;
+}
 
 export class Income{
 	constructor(
@@ -43,13 +51,13 @@ export class Income{
 		return `[${this._category.name}] +${this._amount.amount}円 - ${this._memo.content}`;
 	}
 
-	toJSON() { 
-	return { 
-		id: this.id, 
-		amount: this._amount.amount, 
-		date: this._date.formatted, 
-		category: this._category.name, 
-		memo: this._memo.content, 
-	};
+	toJSON(): IncomeData {
+		return {
+			id: this.id,
+			amount: this._amount.amount,
+			date: this._date.formatted,
+			category: this._category.name as IncomeCategoryType,
+			memo: this._memo.content,
+		};
 	}
 }

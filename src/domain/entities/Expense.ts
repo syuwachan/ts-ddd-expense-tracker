@@ -1,7 +1,15 @@
 import { Money } from "../valueObjects/Money";
 import { DateValue } from "../valueObjects/DateValue";
-import { Category } from "../valueObjects/Category";
+import { Category, ExpenseCategoryType } from "../valueObjects/Category";
 import { Memo } from "../valueObjects/Memo";
+
+export interface ExpenseData {
+	id: string;
+	amount: number;
+	date: string;
+	category: ExpenseCategoryType;
+	memo: string;
+}
 
 export class Expense{
 
@@ -43,6 +51,16 @@ export class Expense{
 
 	describe(): string {
 		return `[${this._category.name}] ${this._amount.amount}円 - ${this._memo.content}`;
-	        }
+	}
+
+	toJSON(): ExpenseData {
+		return {
+			id: this.id,
+			amount: this._amount.amount,
+			date: this._date.formatted,
+			category: this._category.name as ExpenseCategoryType,
+			memo: this._memo.content
+		};
+	}
 
 }
