@@ -18,8 +18,8 @@ export default function SummaryCards() {
   const savingRate =
     income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
 
-  const expenseCategories = ['Food & Drink', 'Entertainment', 'Housing', 'Shopping', 'Transport', 'Others'];
-  const incomeCategories = ['Salary', 'Freelance', 'Investment', 'Gift', 'Others'];
+  const expenseCategories = ['Food', 'Transport', 'Housing', 'Entertainment', 'Other'];
+  const incomeCategories = ['Salary', 'Bonus', 'Investment', 'Gift', 'Other'];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
