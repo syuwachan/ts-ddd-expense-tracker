@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -14,18 +15,69 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const expenseCategories = ['Food', 'Transport', 'Housing', 'Entertainment', 'Other'];
   const incomeCategories = ['Salary', 'Bonus', 'Investment', 'Gift', 'Other'];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const mutation = useMutation({
+    mutationFn: async (data: { transactionType: 'income' | 'expense'; amount: number; category: string; date: string; memo: string }) => {
+      const endpoint = `/api/${data.transactionType}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: data.amount,
+          category: data.category,
+          date: new Date(data.date).toISOString(),
+          memo: data.memo,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save transaction');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      // データ再取得
+      queryClient.invalidateQueries({ queryKey: ['income'] });
+      queryClient.invalidateQueries({ queryKey: ['expense'] });
+
+      // フォームリセット
+      setAmount('');
+      setCategory('');
+      setDescription('');
+      setDate(new Date().toISOString().split('T')[0]);
+
+      onClose();
+    },
+    onError: (error) => {
+      console.error('Error saving transaction:', error);
+      alert('Failed to save transaction. Please try again.');
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ transactionType, amount, category, description, date });
-    onClose();
-    setAmount('');
-    setCategory('');
-    setDescription('');
-    setDate(new Date().toISOString().split('T')[0]);
+    setIsSubmitting(true);
+
+    try {
+      await mutation.mutateAsync({
+        transactionType,
+        amount: parseFloat(amount),
+        category,
+        date,
+        memo: description,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -146,15 +198,17 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-all"
+              disabled={isSubmitting}
+              className="flex-1 py-2 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 py-2 px-4 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-medium transition-all shadow-sm"
+              disabled={isSubmitting}
+              className="flex-1 py-2 px-4 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save
+              {isSubmitting ? 'Saving...' : 'Save'}
             </button>
           </div>
         </form>

@@ -11,8 +11,8 @@ export class PrismaExpenseRepository implements ExpenseRepository {
 	async save(expense: Expense): Promise<void> {
 		await prisma.expense.upsert({
 			where: { id: expense.id },
-			update: expense.toJSON(),
-			create: expense.toJSON(),
+			update: expense.toPersistence(),
+			create: expense.toPersistence(),
 		});
 	}
 

@@ -62,5 +62,15 @@ export class Expense{
 			memo: this._memo.content
 		};
 	}
+	
+	toPersistence() {
+		return {
+			id: this.id,
+			amount: this._amount.amount,
+			date: this._date.isoString,
+			category: this._category.name,
+			memo: this._memo.content,
+		};
+	}
 
 }

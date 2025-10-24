@@ -2,16 +2,14 @@
 
 import { useState } from 'react';
 import TransactionModal from './TransactionModal';
+import { useTransactions } from '@/hooks/useTransactions';
 
 export default function SummaryCards() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const total = 120000;
-  const income = 200000;
-  const expense = 80000;
+  const { totalIncome, totalExpense, balance, isLoading } = useTransactions();
 
   const savingRate =
-    income > 0 ? Math.round(((income - expense) / income) * 100) : 0;
+    totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
 
   return (
     <>
@@ -19,9 +17,13 @@ export default function SummaryCards() {
         {/* 💰 Total Balance */}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <h3 className="text-gray-500 text-sm font-medium">Total Balance</h3>
-          <p className="text-2xl font-semibold text-gray-800 mt-1">
-            ¥{total.toLocaleString()}
-          </p>
+          {isLoading ? (
+            <p className="text-2xl font-semibold text-gray-400 mt-1">Loading...</p>
+          ) : (
+            <p className="text-2xl font-semibold text-gray-800 mt-1">
+              ¥{balance.toLocaleString()}
+            </p>
+          )}
 
           {/* 💡 貯蓄率 */}
           <div className="mt-4">
@@ -40,6 +42,30 @@ export default function SummaryCards() {
               + Record
             </button>
           </div>
+        </div>
+
+        {/* 💵 Total Income */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-gray-500 text-sm font-medium">Total Income</h3>
+          {isLoading ? (
+            <p className="text-2xl font-semibold text-gray-400 mt-1">Loading...</p>
+          ) : (
+            <p className="text-2xl font-semibold text-green-600 mt-1">
+              ¥{totalIncome.toLocaleString()}
+            </p>
+          )}
+        </div>
+
+        {/* 💸 Total Expense */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-gray-500 text-sm font-medium">Total Expense</h3>
+          {isLoading ? (
+            <p className="text-2xl font-semibold text-gray-400 mt-1">Loading...</p>
+          ) : (
+            <p className="text-2xl font-semibold text-red-600 mt-1">
+              ¥{totalExpense.toLocaleString()}
+            </p>
+          )}
         </div>
 
       </section>
