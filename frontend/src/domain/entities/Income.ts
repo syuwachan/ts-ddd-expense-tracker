@@ -60,4 +60,15 @@ export class Income{
 			memo: this._memo.content,
 		};
 	}
+
+	/** Database用のデータを返す（完全なISO 8601形式の日時を含む） */
+	toPersistence() {
+		return {
+			id: this.id,
+			amount: this._amount.amount,
+			date: this._date.isoString,
+			category: this._category.name,
+			memo: this._memo.content,
+		};
+	}
 }

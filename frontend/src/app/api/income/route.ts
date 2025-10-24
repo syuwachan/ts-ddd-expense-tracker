@@ -1,17 +1,22 @@
 // app/api/income/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { PrismaIncomeRepository } from "@/infrastructure/PrismaIncomeRepository";
 import { RecordIncomeService } from "@/domain/services/RecordIncomeService";
-import { z } from "zod";
 import { DateValue } from "@/domain/valueObjects/DateValue";
 import { IncomeCategoryType } from "@/domain/valueObjects/Category";
 
+// ================================
+// 🔧 Setup
+// ================================
 const repo = new PrismaIncomeRepository();
 const recordIncomeService = new RecordIncomeService(repo);
+
+// ✅ JSONパース前提なので、z.date() ではなく z.string().datetime() が安全
 const incomeSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
   category: z.string(),
-  date: z.date(),
+  date: z.string().datetime(), // ← z.date() は JSON直列化では動作しない
   memo: z.string().optional().default(""),
 });
 
@@ -27,15 +32,16 @@ export async function POST(req: NextRequest) {
     const income = await recordIncomeService.execute({
       amount: parsed.amount,
       category: parsed.category as IncomeCategoryType,
-      date: new DateValue(parsed.date.toISOString()),
+      date: new DateValue(parsed.date),
       memo: parsed.memo,
     });
 
     return NextResponse.json(income.toJSON(), { status: 201 });
   } catch (err: any) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
+      return NextResponse.json({ error: err.errors }, { status: 400 });
     }
+    console.error("❌ POST /api/income error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
@@ -55,6 +61,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(incomes.map((i) => i.toJSON()), { status: 200 });
   } catch (err: any) {
+    console.error("❌ GET /api/income error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

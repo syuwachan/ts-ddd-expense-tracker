@@ -11,8 +11,8 @@ export class PrismaIncomeRepository implements IncomeRepository {
 	async save(income: Income): Promise<void> {
 		await prisma.income.upsert({
 			where: { id: income.id },
-			update: income.toJSON(),
-			create: income.toJSON(),
+			update: income.toPersistence(),
+			create: income.toPersistence(),
 		});
 	}
 
