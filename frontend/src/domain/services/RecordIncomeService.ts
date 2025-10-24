@@ -24,13 +24,7 @@ export class RecordIncomeService {
     const category = new Category(input.category);
     const memo = new Memo(input.memo ?? "");
 
-    const income = new Income(
-      randomUUID(),
-      money,
-      dateValue,
-      category,
-      memo
-    );
+    const income = new Income(randomUUID(), money, dateValue, category, memo);
 
     await this.repo.save(income);
     return income;
