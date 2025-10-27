@@ -101,6 +101,19 @@ export function useMonthlySpending(months: number = 12) {
   });
 }
 
+export function useMonthlyIncome(months: number = 12) {
+  return useQuery<MonthlySpendingData>({
+    queryKey: ['monthly-income', months],
+    queryFn: async () => {
+      const response = await fetch(`/api/income/monthly?months=${months}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch monthly income');
+      }
+      return response.json() as Promise<MonthlySpendingData>;
+    },
+  });
+}
+
 export function useTransactions() {
   const income = useIncome();
   const expense = useExpense();
