@@ -8,6 +8,12 @@ interface Transaction {
   memo: string;
 }
 
+interface Summary {
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
+}
+
 export function useIncome() {
   return useQuery<Transaction[]>({
     queryKey: ['income'],
@@ -34,21 +40,31 @@ export function useExpense() {
   });
 }
 
+export function useSummary() {
+  return useQuery<Summary>({
+    queryKey: ['summary'],
+    queryFn: async () => {
+      const response = await fetch('/api/summary');
+      if (!response.ok) {
+        throw new Error('Failed to fetch summary');
+      }
+      return response.json() as Promise<Summary>;
+    },
+  });
+}
+
 export function useTransactions() {
   const income = useIncome();
   const expense = useExpense();
-
-  const totalIncome = income.data?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
-  const totalExpense = expense.data?.reduce((sum, item) => sum + item.amount, 0) ?? 0;
-  const balance = totalIncome - totalExpense;
+  const summary = useSummary();
 
   return {
     income,
     expense,
-    totalIncome,
-    totalExpense,
-    balance,
-    isLoading: income.isLoading || expense.isLoading,
-    isError: income.isError || expense.isError,
+    totalIncome: summary.data?.totalIncome ?? 0,
+    totalExpense: summary.data?.totalExpense ?? 0,
+    balance: summary.data?.balance ?? 0,
+    isLoading: income.isLoading || expense.isLoading || summary.isLoading,
+    isError: income.isError || expense.isError || summary.isError,
   };
 }

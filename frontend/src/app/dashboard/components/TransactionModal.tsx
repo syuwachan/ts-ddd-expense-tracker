@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Category } from '@/domain/valueObjects/Category';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -19,8 +20,9 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
 
   const queryClient = useQueryClient();
 
-  const expenseCategories = ['Food', 'Transport', 'Housing', 'Entertainment', 'Other'];
-  const incomeCategories = ['Salary', 'Bonus', 'Investment', 'Gift', 'Other'];
+  // Domain層からカテゴリーを取得
+  const expenseCategories = Category.allExpense().map(cat => cat.name);
+  const incomeCategories = Category.allIncome().map(cat => cat.name);
 
   const mutation = useMutation({
     mutationFn: async (data: { transactionType: 'income' | 'expense'; amount: number; category: string; date: string; memo: string }) => {

@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { PrismaIncomeRepository } from "@/infrastructure/PrismaIncomeRepository";
-import { UpdateIncomeService } from "@/domain/services/UpdateIncomeService";
-
-// Infrastructure層に依存するRepositoryを注入
-const repo = new PrismaIncomeRepository();
-const updateIncomeService = new UpdateIncomeService(repo);
+import { createContainer } from "@/infrastructure/di/container";
 
 // =============================
 // 🧩 Validation schema
@@ -28,6 +23,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // リクエストごとに新しいコンテナを作成
+    const container = createContainer();
+    const updateIncomeService = container.createUpdateIncomeService();
+
     const json = await req.json();
     const parsed = incomeUpdateSchema.parse(json);
 

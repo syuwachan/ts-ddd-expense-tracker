@@ -1,16 +1,9 @@
 // app/api/expense/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { PrismaExpenseRepository } from "@/infrastructure/PrismaExpenseRepository";
-import { RecordExpenseService } from "@domain/services/RecordExpenseService";
+import { createContainer } from "@/infrastructure/di/container";
 import { DateValue } from "@/domain/valueObjects/DateValue";
 import { ExpenseCategoryType } from "@/domain/valueObjects/Category";
-
-// ================================
-// 🔧 Setup
-// ================================
-const repo = new PrismaExpenseRepository();
-const recordExpenseService = new RecordExpenseService(repo);
 
 const expenseSchema = z.object({
   amount: z.number().positive("Amount must be positive"),
@@ -32,6 +25,10 @@ const isErrorWithMessage = (err: unknown): err is { message: string } => {
 // ================================
 export async function POST(req: NextRequest) {
   try {
+    // リクエストごとに新しいコンテナを作成
+    const container = createContainer();
+    const recordExpenseService = container.createRecordExpenseService();
+
     const json = await req.json();
     const parsed = expenseSchema.parse(json);
 
@@ -61,6 +58,10 @@ export async function POST(req: NextRequest) {
 // ================================
 export async function GET(req: NextRequest) {
   try {
+    // リクエストごとに新しいコンテナを作成
+    const container = createContainer();
+    const repo = container.getExpenseRepository();
+
     const { searchParams } = new URL(req.url);
     const month = searchParams.get("month");
 

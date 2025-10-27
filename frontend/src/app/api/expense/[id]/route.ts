@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { PrismaExpenseRepository } from "@/infrastructure/PrismaExpenseRepository";
-import { UpdateExpenseService } from "@/domain/services/UpdateExpenseService";
-
-
-const repo = new PrismaExpenseRepository();
-const updateExpenseService = new UpdateExpenseService(repo);
+import { createContainer } from "@/infrastructure/di/container";
 
 const expenseUpdateSchema = z.object({
   amount: z.number().positive().optional(),
@@ -22,6 +17,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // リクエストごとに新しいコンテナを作成
+    const container = createContainer();
+    const updateExpenseService = container.createUpdateExpenseService();
+
     const json = await req.json();
     const parsed = expenseUpdateSchema.parse(json);
 
