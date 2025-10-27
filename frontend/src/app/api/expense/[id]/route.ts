@@ -3,6 +3,7 @@ import { z } from "zod";
 import { PrismaExpenseRepository } from "@/infrastructure/PrismaExpenseRepository";
 import { UpdateExpenseService } from "@/domain/services/UpdateExpenseService";
 
+
 const repo = new PrismaExpenseRepository();
 const updateExpenseService = new UpdateExpenseService(repo);
 

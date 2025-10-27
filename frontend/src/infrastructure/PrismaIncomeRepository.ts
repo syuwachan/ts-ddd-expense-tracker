@@ -4,7 +4,7 @@ import { IncomeRepository } from "@/domain/repositories/IncomeRepository";
 import { Income } from "@/domain/entities/Income";
 import { Money } from "@/domain/valueObjects/Money";
 import { DateValue } from "@/domain/valueObjects/DateValue";
-import { Category } from "@/domain/valueObjects/Category";
+import { Category, IncomeCategoryType } from "@/domain/valueObjects/Category";
 import { Memo } from "@/domain/valueObjects/Memo";
 
 export class PrismaIncomeRepository implements IncomeRepository {
@@ -23,7 +23,7 @@ export class PrismaIncomeRepository implements IncomeRepository {
 			record.id,
 			new Money(record.amount),
 			new DateValue(record.date),
-			new Category(record.category),
+			new Category(record.category as IncomeCategoryType),
 			new Memo(record.memo)
 		);
 	}
@@ -36,7 +36,7 @@ export class PrismaIncomeRepository implements IncomeRepository {
 					r.id,
 					new Money(r.amount),
 					new DateValue(r.date),
-					new Category(r.category),
+					new Category(r.category as IncomeCategoryType),
 					new Memo(r.memo)
 				)
 		);
@@ -64,13 +64,21 @@ export class PrismaIncomeRepository implements IncomeRepository {
 					r.id,
 					new Money(r.amount),
 					new DateValue(r.date),
-					new Category(r.category),
+					new Category(r.category as IncomeCategoryType),
 					new Memo(r.memo)
 				)
 		);
 	}
 
-	async delete(id: string): Promise<void> {
+	async update(income: Income): Promise<Income> {
+		await prisma.income.update({
+		  where: { id: income.id },
+		  data: income.toPersistence(),
+		});
+		return income;
+	        }
+
+	async delete(id: string): Promise<void> {	
 		await prisma.income.delete({ where: { id } });
 	}
 }

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { PrismaIncomeRepository } from "@/infrastructure/PrismaIncomeRepository";
-import { DateValue } from "@/domain/valueObjects/DateValue";
-import { IncomeCategoryType } from "@/domain/valueObjects/Category";
+import { UpdateIncomeService } from "@/domain/services/UpdateIncomeService";
 
+// Infrastructure層に依存するRepositoryを注入
 const repo = new PrismaIncomeRepository();
+const updateIncomeService = new UpdateIncomeService(repo);
 
+// =============================
+// 🧩 Validation schema
+// =============================
 const incomeUpdateSchema = z.object({
   amount: z.number().positive().optional(),
   category: z.string().optional(),
@@ -16,6 +20,9 @@ const incomeUpdateSchema = z.object({
 const isErrorWithMessage = (err: unknown): err is { message: string } =>
   typeof err === "object" && err !== null && "message" in err;
 
+// =============================
+// PUT /api/income/[id]
+// =============================
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -24,19 +31,7 @@ export async function PUT(
     const json = await req.json();
     const parsed = incomeUpdateSchema.parse(json);
 
-    const existing = await repo.findById(params.id);
-    if (!existing) {
-      return NextResponse.json({ error: "Income not found" }, { status: 404 });
-    }
-
-    const updated = await repo.update(params.id, {
-      amount: parsed.amount ?? existing.amount.value,
-      category:
-        (parsed.category as IncomeCategoryType) ?? existing.category.value,
-      date: parsed.date ? new DateValue(parsed.date) : existing.date,
-      memo: parsed.memo ?? existing.memo,
-    });
-
+    const updated = await updateIncomeService.execute(params.id, parsed);
     return NextResponse.json(updated.toJSON(), { status: 200 });
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
@@ -45,11 +40,15 @@ export async function PUT(
     const message = isErrorWithMessage(err)
       ? err.message
       : "Unexpected error occurred";
-    console.error("L PUT /api/income/[id] error:", err);
+    console.error("❌ PUT /api/income/[id] error:", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
+// =============================
+// PATCH /api/income/[id]
+// =============================
+// PATCH もPUTと同じ動作
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
