@@ -14,6 +14,18 @@ interface Summary {
   balance: number;
 }
 
+interface CategoryBudget {
+  category: string;
+  amount: number;
+  percent: number;
+  color: string;
+}
+
+interface BudgetData {
+  budgets: CategoryBudget[];
+  total: number;
+}
+
 export function useIncome() {
   return useQuery<Transaction[]>({
     queryKey: ['income'],
@@ -49,6 +61,19 @@ export function useSummary() {
         throw new Error('Failed to fetch summary');
       }
       return response.json() as Promise<Summary>;
+    },
+  });
+}
+
+export function useBudget() {
+  return useQuery<BudgetData>({
+    queryKey: ['budget'],
+    queryFn: async () => {
+      const response = await fetch('/api/budget');
+      if (!response.ok) {
+        throw new Error('Failed to fetch budget');
+      }
+      return response.json() as Promise<BudgetData>;
     },
   });
 }

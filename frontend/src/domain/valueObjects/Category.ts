@@ -15,6 +15,7 @@ export type IncomeCategoryType =
 export type CategoryType = ExpenseCategoryType | IncomeCategoryType;
 
 export class Category{
+	//immutable
 	private readonly value:CategoryType;
 
 	constructor(value:CategoryType){

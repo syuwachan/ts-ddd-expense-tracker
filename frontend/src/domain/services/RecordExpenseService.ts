@@ -4,13 +4,13 @@ import { Expense } from "../entities/Expense";
 import { Money } from "../valueObjects/Money";
 import { DateValue } from "../valueObjects/DateValue";
 import { Category } from "../valueObjects/Category";
-import { ExpenseCategoryType } from "../valueObjects/Category";
+import { CategoryType } from "../valueObjects/Category";
 import { Memo } from "../valueObjects/Memo";
 import { randomUUID } from "node:crypto";
 
 export interface RecordExpenseInput {
   amount: number;
-  category: ExpenseCategoryType;
+  category: CategoryType;
   date: DateValue;
   memo?: string;
 }
