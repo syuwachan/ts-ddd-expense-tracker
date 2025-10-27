@@ -36,6 +36,21 @@ interface MonthlySpendingData {
   total: number;
 }
 
+interface TopCategory {
+  name: string;
+  amount: number;
+  percent: number;
+}
+
+interface MonthlyReport {
+  month: string;
+  totalIncome: number;
+  totalExpense: number;
+  netSavings: number;
+  savingsRate: number;
+  topCategories: TopCategory[];
+}
+
 export function useIncome() {
   return useQuery<Transaction[]>({
     queryKey: ['income'],
@@ -111,6 +126,20 @@ export function useMonthlyIncome(months: number = 12) {
       }
       return response.json() as Promise<MonthlySpendingData>;
     },
+  });
+}
+
+export function useMonthlyReport(month: string) {
+  return useQuery<MonthlyReport>({
+    queryKey: ['monthly-report', month],
+    queryFn: async () => {
+      const response = await fetch(`/api/reports/monthly?month=${month}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch monthly report');
+      }
+      return response.json() as Promise<MonthlyReport>;
+    },
+    enabled: !!month, // Only fetch if month is provided
   });
 }
 
