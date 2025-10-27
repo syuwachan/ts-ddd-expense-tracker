@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,8 +11,10 @@ import {
   Tooltip,
   Legend,
   Filler,
+  TooltipItem,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { useSummary } from '@/hooks/useTransactions';
 
 ChartJS.register(
   CategoryScale,
@@ -26,19 +28,42 @@ ChartJS.register(
 );
 
 export default function SettingsPage() {
-  // 目標設定
-  const [monthlyIncomeGoal, setMonthlyIncomeGoal] = useState(200000);
-  const [monthlyExpenseGoal, setMonthlyExpenseGoal] = useState(80000);
+  // Fetch real data
+  const { data: summary, isLoading } = useSummary();
+
+  // goal setting
+  const [monthlyIncomeGoal, setMonthlyIncomeGoal] = useState(0);
+  const [monthlyExpenseGoal, setMonthlyExpenseGoal] = useState(0);
   const [savingsGoal, setSavingsGoal] = useState(1000000);
   const [savingsDeadline, setSavingsDeadline] = useState('2026-12-31');
 
-  // 資産シミュレーション
-  const [currentAssets, setCurrentAssets] = useState(500000);
-  const [monthlySavings, setMonthlySavings] = useState(120000);
+  // asset simulation
+  const [currentAssets, setCurrentAssets] = useState(0);
+  const [monthlySavings, setMonthlySavings] = useState(0);
   const [annualReturn, setAnnualReturn] = useState(3);
   const [simulationYears, setSimulationYears] = useState(10);
 
-  // シミュレーション計算
+  // Populate initial values from real data
+  useEffect(() => {
+    if (summary) {
+      // Set current assets to actual balance
+      setCurrentAssets(summary.balance);
+
+      // Calculate net monthly savings (income - expense)
+      const netSavings = summary.totalIncome - summary.totalExpense;
+      setMonthlySavings(netSavings);
+
+      // Set goals based on actual totals
+      if (monthlyIncomeGoal === 0) {
+        setMonthlyIncomeGoal(summary.totalIncome);
+      }
+      if (monthlyExpenseGoal === 0) {
+        setMonthlyExpenseGoal(summary.totalExpense);
+      }
+    }
+  }, [summary, monthlyIncomeGoal, monthlyExpenseGoal]);
+
+  // simulation calculation
   const calculateSimulation = () => {
     const months = simulationYears * 12;
     const monthlyRate = annualReturn / 100 / 12;
@@ -81,7 +106,7 @@ export default function SettingsPage() {
       legend: { display: true },
       tooltip: {
         callbacks: {
-          label: (context: any) => `¥${context.parsed.y.toLocaleString()}`,
+          label: (context: TooltipItem<'line'>) => `¥${context.parsed?.y?.toLocaleString() ?? '0'}`,
         },
       },
     },
@@ -89,13 +114,13 @@ export default function SettingsPage() {
       y: {
         beginAtZero: false,
         ticks: {
-          callback: (value: any) => `¥${(value / 10000).toFixed(0)}万`,
+          callback: (value: string | number) => `¥${((Number(value) / 10000).toFixed(0))}万`,
         },
       },
     },
   };
 
-  // 目標達成までの期間計算
+  // calculate time to goal
   const calculateGoalMonths = () => {
     if (monthlySavings <= 0) return Infinity;
     const remaining = savingsGoal - currentAssets;
@@ -117,11 +142,26 @@ export default function SettingsPage() {
   const yearsToGoal = Math.floor(monthsToGoal / 12);
   const remainingMonths = monthsToGoal % 12;
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6">
+        <header>
+          <h1 className="text-2xl font-semibold text-gray-800">Simulation</h1>
+          <p className="text-gray-500">Manage your financial goals and simulations</p>
+        </header>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+          <p className="text-gray-400">Loading financial data...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <header>
-        <h1 className="text-2xl font-semibold text-gray-800">Settings</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Simulation</h1>
         <p className="text-gray-500">Manage your financial goals and simulations</p>
       </header>
 
