@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useIncome, useExpense } from '@/hooks/useTransactions';
 
 interface Transaction {
   id: string;
@@ -15,17 +16,34 @@ export default function TransactionsPage() {
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [filterCategory, setFilterCategory] = useState<string>('all');
 
-  // サンプルデータ
-  const transactions: Transaction[] = [
-    { id: '1', date: '2025-10-22', category: 'Salary', description: 'Monthly salary', amount: 200000, type: 'income' },
-    { id: '2', date: '2025-10-22', category: 'Food & Drink', description: 'Lunch at restaurant', amount: 1500, type: 'expense' },
-    { id: '3', date: '2025-10-21', category: 'Entertainment', description: 'Movie ticket', amount: 1800, type: 'expense' },
-    { id: '4', date: '2025-10-21', category: 'Shopping', description: 'Clothing', amount: 8500, type: 'expense' },
-    { id: '5', date: '2025-10-20', category: 'Food & Drink', description: 'Groceries', amount: 4200, type: 'expense' },
-    { id: '6', date: '2025-10-19', category: 'Transportation', description: 'Train pass', amount: 10000, type: 'expense' },
-    { id: '7', date: '2025-10-18', category: 'Freelance', description: 'Project payment', amount: 50000, type: 'income' },
-    { id: '8', date: '2025-10-17', category: 'Food & Drink', description: 'Cafe', amount: 680, type: 'expense' },
-  ];
+  const { data: incomesData, isLoading: incomesLoading } = useIncome();
+  const { data: expensesData, isLoading: expensesLoading } = useExpense();
+
+  // combine income and expense and convert to Transaction type
+  const transactions: Transaction[] = useMemo(() => {
+    const incomes = (incomesData || []).map(income => ({
+      id: income.id,
+      date: income.date,
+      category: income.category,
+      description: income.memo,
+      amount: income.amount,
+      type: 'income' as const,
+    }));
+
+    const expenses = (expensesData || []).map(expense => ({
+      id: expense.id,
+      date: expense.date,
+      category: expense.category,
+      description: expense.memo,
+      amount: expense.amount,
+      type: 'expense' as const,
+    }));
+
+    // combine and sort by date (newest first)
+    return [...incomes, ...expenses].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [incomesData, expensesData]);
 
   const categories = Array.from(new Set(transactions.map(t => t.category)));
 
@@ -43,6 +61,8 @@ export default function TransactionsPage() {
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
+  const isLoading = incomesLoading || expensesLoading;
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -53,6 +73,13 @@ export default function TransactionsPage() {
         </div>
       </header>
 
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 text-center">
+          <p className="text-gray-400">Loading transactions...</p>
+        </div>
+      ) : (
+        <>
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -157,7 +184,7 @@ export default function TransactionsPage() {
               {filteredTransactions.map((transaction) => (
                 <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {transaction.date}
+                    {new Date(transaction.date).toLocaleDateString('ja-JP')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {transaction.category}
@@ -193,6 +220,8 @@ export default function TransactionsPage() {
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }
