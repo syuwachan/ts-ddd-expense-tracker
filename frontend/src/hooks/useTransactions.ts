@@ -26,6 +26,16 @@ interface BudgetData {
   total: number;
 }
 
+interface MonthlySpending {
+  month: string;
+  amount: number;
+}
+
+interface MonthlySpendingData {
+  data: MonthlySpending[];
+  total: number;
+}
+
 export function useIncome() {
   return useQuery<Transaction[]>({
     queryKey: ['income'],
@@ -74,6 +84,19 @@ export function useBudget() {
         throw new Error('Failed to fetch budget');
       }
       return response.json() as Promise<BudgetData>;
+    },
+  });
+}
+
+export function useMonthlySpending(months: number = 12) {
+  return useQuery<MonthlySpendingData>({
+    queryKey: ['monthly-spending', months],
+    queryFn: async () => {
+      const response = await fetch(`/api/spending/monthly?months=${months}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch monthly spending');
+      }
+      return response.json() as Promise<MonthlySpendingData>;
     },
   });
 }

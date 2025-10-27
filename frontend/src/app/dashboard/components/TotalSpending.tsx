@@ -11,12 +11,39 @@ import {
   Filler,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import { useMonthlySpending } from '@/hooks/useTransactions';
 
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend, Filler);
 
 export default function TotalSpending() {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-  const spending = [4800, 5100, 4650, 5200, 4900, 5300, 5500];
+  const { data: monthlyData, isLoading, isError } = useMonthlySpending(7); // 直近7ヶ月
+
+  if (isLoading) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-gray-800 font-semibold text-lg mb-4">Total Spending</h3>
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    );
+  }
+
+  if (isError || !monthlyData) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-gray-800 font-semibold text-lg mb-4">Total Spending</h3>
+        <p className="text-red-500">Failed to load spending data</p>
+      </div>
+    );
+  }
+  
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = monthlyData.data.map(item => {
+    const [year, month] = item.month.split('-');
+    return monthNames[parseInt(month, 10) - 1];
+  });
+
+  const spending = monthlyData.data.map(item => item.amount);
+  const total = monthlyData.total;
 
   const data = {
     labels: months,
@@ -53,13 +80,16 @@ export default function TotalSpending() {
         grid: { color: '#f3f4f6' },
         ticks: {
           color: '#6b7280',
-          callback: (value: number) => `¥${value.toLocaleString()}`,
+          callback: (value: number | string) => `¥${Number(value).toLocaleString()}`,
         },
       },
     },
   };
 
-  const total = spending.reduce((a, b) => a + b, 0);
+  // 期間の表示を動的に生成
+  const firstMonth = months[0] || '';
+  const lastMonth = months[months.length - 1] || '';
+  const periodText = firstMonth && lastMonth ? `${firstMonth}–${lastMonth}` : 'Recent months';
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -73,12 +103,16 @@ export default function TotalSpending() {
           <p className="text-xl font-semibold text-gray-800">
             ¥{total.toLocaleString()}
           </p>
-          <p className="text-sm text-gray-400">Total (Jan–Jul)</p>
+          <p className="text-sm text-gray-400">Total ({periodText})</p>
         </div>
       </div>
 
       {/* Chart */}
-      <Line data={data} options={options} />
+      {spending.length > 0 ? (
+        <Line data={data} options={options} />
+      ) : (
+        <p className="text-gray-400 text-center py-8">No spending data available</p>
+      )}
     </div>
   );
 }

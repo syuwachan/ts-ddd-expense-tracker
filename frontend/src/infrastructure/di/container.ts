@@ -8,6 +8,7 @@ import { UpdateIncomeService } from "@/domain/services/UpdateIncomeService";
 import { CalculateTotalExpenseService } from "@/application/useCases/CalculateTotalExpenseService";
 import { CalculateTotalIncomeService } from "@/application/useCases/CalculateTotalIncomeService";
 import { CalculateBudgetByCategoryService } from "@/application/useCases/CalculateBudgetByCategoryService";
+import { CalculateMonthlySpendingService } from "@/application/useCases/CalculateMonthlySpendingService";
 import { ExpenseRepository } from "@/domain/repositories/ExpenseRepository";
 import { IncomeRepository } from "@/domain/repositories/IncomeRepository";
 
@@ -86,6 +87,11 @@ class DIContainer {
   public createCalculateBudgetByCategoryService(): CalculateBudgetByCategoryService {
     const repo = this.createExpenseRepository();
     return new CalculateBudgetByCategoryService(repo);
+  }
+
+  public createCalculateMonthlySpendingService(): CalculateMonthlySpendingService {
+    const repo = this.createExpenseRepository();
+    return new CalculateMonthlySpendingService(repo);
   }
 }
 
