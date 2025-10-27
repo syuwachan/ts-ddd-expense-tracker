@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  TooltipItem,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { useMonthlySpending } from '@/hooks/useTransactions';
@@ -51,12 +52,12 @@ export default function TotalSpending() {
       {
         label: 'Total Spending',
         data: spending,
-        fill: true, // ← 面グラデーション有効化
-        backgroundColor: 'rgba(59, 130, 246, 0.1)', // sky-500 with opacity
-        borderColor: 'rgba(59, 130, 246, 1)', // sky-500
+        fill: true, 
+        backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+        borderColor: 'rgba(59, 130, 246, 1)', 
         pointBackgroundColor: 'rgba(59, 130, 246, 1)',
         pointRadius: 5,
-        tension: 0.4, // ← 曲線にする
+        tension: 0.4, 
       },
     ],
   };
@@ -67,7 +68,7 @@ export default function TotalSpending() {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (context: any) => `¥${context.parsed.y.toLocaleString()}`,
+          label: (context: TooltipItem<'line'>) => `¥${context.parsed.y.toLocaleString()}`,
         },
       },
     },
@@ -86,7 +87,7 @@ export default function TotalSpending() {
     },
   };
 
-  // 期間の表示を動的に生成
+  // generate period text dynamically
   const firstMonth = months[0] || '';
   const lastMonth = months[months.length - 1] || '';
   const periodText = firstMonth && lastMonth ? `${firstMonth}–${lastMonth}` : 'Recent months';

@@ -1,16 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Category } from '@/domain/valueObjects/Category';
 
+interface TransactionData {
+  id: string;
+  amount: number;
+  category: string;
+  date: string;
+  memo: string;
+}
+
 interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  editMode?: 'income' | 'expense' | null;
+  editData?: TransactionData;
 }
 
-export default function TransactionModal({ isOpen, onClose }: TransactionModalProps) {
+export default function TransactionModal({ isOpen, onClose, editMode = null, editData }: TransactionModalProps) {
   const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -18,17 +28,38 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // if edit mode, set data
+  useEffect(() => {
+    if (editMode && editData) {
+      setTransactionType(editMode);
+      setAmount(editData.amount.toString());
+      setCategory(editData.category);
+      setDescription(editData.memo);
+      setDate(new Date(editData.date).toISOString().split('T')[0]);
+    } else {
+      // reset for new creation mode
+      setTransactionType('expense');
+      setAmount('');
+      setCategory('');
+      setDescription('');
+      setDate(new Date().toISOString().split('T')[0]);
+    }
+  }, [editMode, editData, isOpen]);
+
   const queryClient = useQueryClient();
 
-  // Domain層からカテゴリーを取得
+  // get categories from domain layer
   const expenseCategories = Category.allExpense().map(cat => cat.name);
   const incomeCategories = Category.allIncome().map(cat => cat.name);
 
   const mutation = useMutation({
-    mutationFn: async (data: { transactionType: 'income' | 'expense'; amount: number; category: string; date: string; memo: string }) => {
-      const endpoint = `/api/${data.transactionType}`;
+    mutationFn: async (data: { transactionType: 'income' | 'expense'; amount: number; category: string; date: string; memo: string; id?: string }) => {
+      const isEdit = editMode && editData;
+      const endpoint = isEdit ? `/api/${data.transactionType}/${data.id}` : `/api/${data.transactionType}`;
+      const method = isEdit ? 'PUT' : 'POST';
+
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -41,17 +72,17 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save transaction');
+        throw new Error(`Failed to ${isEdit ? 'update' : 'save'} transaction`);
       }
 
       return response.json();
     },
     onSuccess: () => {
-      // データ再取得
+      // re-fetch data
       queryClient.invalidateQueries({ queryKey: ['income'] });
       queryClient.invalidateQueries({ queryKey: ['expense'] });
 
-      // フォームリセット
+      // reset form
       setAmount('');
       setCategory('');
       setDescription('');
@@ -76,6 +107,7 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
         category,
         date,
         memo: description,
+        id: editData?.id,
       });
     } finally {
       setIsSubmitting(false);
@@ -89,7 +121,9 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto animate-scaleIn">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800">Record Transaction</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            {editMode ? 'Edit Transaction' : 'Record Transaction'}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -109,22 +143,24 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
               <button
                 type="button"
                 onClick={() => setTransactionType('expense')}
+                disabled={!!editMode}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                   transactionType === 'expense'
                     ? 'bg-red-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                } ${editMode ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Expense
               </button>
               <button
                 type="button"
                 onClick={() => setTransactionType('income')}
+                disabled={!!editMode}
                 className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                   transactionType === 'income'
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                } ${editMode ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 Income
               </button>
@@ -210,7 +246,7 @@ export default function TransactionModal({ isOpen, onClose }: TransactionModalPr
               disabled={isSubmitting}
               className="flex-1 py-2 px-4 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-medium transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : 'Save'}
+              {isSubmitting ? (editMode ? 'Updating...' : 'Saving...') : (editMode ? 'Update' : 'Save')}
             </button>
           </div>
         </form>

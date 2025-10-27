@@ -17,7 +17,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // リクエストごとに新しいコンテナを作成
+    // create new container for each request
     const container = createContainer();
     const updateExpenseService = container.createUpdateExpenseService();
 
@@ -34,6 +34,25 @@ export async function PUT(
       ? err.message
       : "Unexpected error occurred";
     console.error("❌ PUT /api/expense/[id] error:", err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const container = createContainer();
+    const expenseRepository = container.getExpenseRepository();
+
+    await expenseRepository.delete(params.id);
+    return NextResponse.json({ message: "Expense deleted successfully" }, { status: 200 });
+  } catch (err: unknown) {
+    const message = isErrorWithMessage(err)
+      ? err.message
+      : "Unexpected error occurred";
+    console.error("❌ DELETE /api/expense/[id] error:", err);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

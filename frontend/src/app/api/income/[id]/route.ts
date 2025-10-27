@@ -23,7 +23,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    // リクエストごとに新しいコンテナを作成
+    // create new container for each request
     const container = createContainer();
     const updateIncomeService = container.createUpdateIncomeService();
 
@@ -47,10 +47,32 @@ export async function PUT(
 // =============================
 // PATCH /api/income/[id]
 // =============================
-// PATCH もPUTと同じ動作
+// PATCH has the same behavior as PUT
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   return PUT(req, { params });
+}
+
+// =============================
+// DELETE /api/income/[id]
+// =============================
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const container = createContainer();
+    const incomeRepository = container.getIncomeRepository();
+
+    await incomeRepository.delete(params.id);
+    return NextResponse.json({ message: "Income deleted successfully" }, { status: 200 });
+  } catch (err: unknown) {
+    const message = isErrorWithMessage(err)
+      ? err.message
+      : "Unexpected error occurred";
+    console.error("❌ DELETE /api/income/[id] error:", err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
