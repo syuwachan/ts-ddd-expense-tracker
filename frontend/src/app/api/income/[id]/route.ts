@@ -20,13 +20,14 @@ const isErrorWithMessage = (err: unknown): err is { message: string } =>
 // =============================
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // create new container for each request
     const container = createContainer();
     const updateIncomeService = container.createUpdateIncomeService();
 
+    const params = await context.params;
     const json = await req.json();
     const parsed = incomeUpdateSchema.parse(json);
 
@@ -50,9 +51,9 @@ export async function PUT(
 // PATCH has the same behavior as PUT
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  return PUT(req, { params });
+  return PUT(req, context);
 }
 
 // =============================

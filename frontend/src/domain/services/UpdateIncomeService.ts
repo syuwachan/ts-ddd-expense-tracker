@@ -23,12 +23,10 @@ export class UpdateIncomeService {
 
     const updated = new Income(
       existing.id,
-      new Money(dto.amount ?? existing.amount.amount),
-      new DateValue(dto.date ?? existing.date.isoString),
-      new Category(
-        (dto.category as IncomeCategoryType) ?? existing.category.name
-      ),
-      new Memo(dto.memo ?? existing.memo.content)
+      dto.amount !== undefined ? new Money(dto.amount) : existing.amount,
+      dto.date !== undefined ? new DateValue(dto.date) : existing.date,
+      dto.category !== undefined ? new Category(dto.category as IncomeCategoryType) : existing.category,
+      dto.memo !== undefined ? new Memo(dto.memo) : existing.memo
     );
 
     return await this.repo.update(updated);
