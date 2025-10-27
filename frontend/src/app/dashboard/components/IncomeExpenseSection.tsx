@@ -1,17 +1,13 @@
 'use client';
 
-export default function IncomeExpenseSection() {
-  // ✅ 仮データ
-  const incomes = [
-    { id: 1, category: 'Salary', amount: 180000, date: '2025-10-01', memo: 'Monthly salary' },
-    { id: 2, category: 'Freelance', amount: 25000, date: '2025-10-15', memo: 'Project payment' },
-  ];
+import { useIncome, useExpense } from '@/hooks/useTransactions';
 
-  const expenses = [
-    { id: 1, category: 'Food', amount: 12000, date: '2025-10-02', memo: 'Lunch with friends' },
-    { id: 2, category: 'Transport', amount: 8000, date: '2025-10-05', memo: 'Train card charge' },
-    { id: 3, category: 'Shopping', amount: 22000, date: '2025-10-10', memo: 'Clothes' },
-  ];
+export default function IncomeExpenseSection() {
+  const { data: incomesData, isLoading: incomesLoading } = useIncome();
+  const { data: expensesData, isLoading: expensesLoading } = useExpense();
+
+  const incomes = incomesData?.slice(0, 5) || [];
+  const expenses = expensesData?.slice(0, 5) || [];
 
   return (
     <section className="bg-white border border-gray-100 shadow-sm rounded-xl p-6">
@@ -21,7 +17,9 @@ export default function IncomeExpenseSection() {
         {/* Incomes */}
         <div>
           <h4 className="text-gray-700 font-semibold mb-3">Incomes</h4>
-          {incomes.length === 0 ? (
+          {incomesLoading ? (
+            <p className="text-gray-400 text-sm">Loading...</p>
+          ) : incomes.length === 0 ? (
             <p className="text-gray-500 text-sm">No incomes recorded yet.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
@@ -33,7 +31,7 @@ export default function IncomeExpenseSection() {
                   <div>
                     <p className="text-gray-800 font-medium">{income.category}</p>
                     <p className="text-sm text-gray-500">
-                      {income.date} — {income.memo}
+                      {new Date(income.date).toLocaleDateString('ja-JP')} — {income.memo || 'No memo'}
                     </p>
                   </div>
                   <p className="text-green-600 font-semibold">
@@ -48,7 +46,9 @@ export default function IncomeExpenseSection() {
         {/* Expenses */}
         <div>
           <h4 className="text-gray-700 font-semibold mb-3">Expenses</h4>
-          {expenses.length === 0 ? (
+          {expensesLoading ? (
+            <p className="text-gray-400 text-sm">Loading...</p>
+          ) : expenses.length === 0 ? (
             <p className="text-gray-500 text-sm">No expenses recorded yet.</p>
           ) : (
             <ul className="divide-y divide-gray-100">
@@ -60,7 +60,7 @@ export default function IncomeExpenseSection() {
                   <div>
                     <p className="text-gray-800 font-medium">{expense.category}</p>
                     <p className="text-sm text-gray-500">
-                      {expense.date} — {expense.memo}
+                      {new Date(expense.date).toLocaleDateString('ja-JP')} — {expense.memo || 'No memo'}
                     </p>
                   </div>
                   <p className="text-red-500 font-semibold">
