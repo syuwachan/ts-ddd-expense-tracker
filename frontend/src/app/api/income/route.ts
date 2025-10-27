@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { PrismaIncomeRepository } from "@/infrastructure/PrismaIncomeRepository";
-import { RecordIncomeService } from "@/domain/services/RecordIncomeService";
+import { RecordIncomeService } from "@domain/services/RecordIncomeService";
 import { DateValue } from "@/domain/valueObjects/DateValue";
 import { IncomeCategoryType } from "@/domain/valueObjects/Category";
 
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(income.toJSON(), { status: 201 });
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
-  return NextResponse.json({ error: err.issues }, { status: 400 });
-}
+      return NextResponse.json({ error: err.issues }, { status: 400 });
+    }
     const message = isErrorWithMessage(err)
       ? err.message
       : "Unexpected error occurred";
@@ -68,7 +68,10 @@ export async function GET(req: NextRequest) {
       ? await repo.findByMonth(month)
       : await repo.findAll();
 
-    return NextResponse.json(incomes.map((i) => i.toJSON()), { status: 200 });
+    return NextResponse.json(
+      incomes.map((i) => i.toJSON()),
+      { status: 200 }
+    );
   } catch (err: unknown) {
     const message = isErrorWithMessage(err)
       ? err.message

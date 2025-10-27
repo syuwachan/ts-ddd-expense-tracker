@@ -5,5 +5,6 @@ export interface ExpenseRepository {
 	 findById(id: string): Promise<Expense | null>;
 	 findAll(): Promise<Expense[]>;
 	 findByMonth(month: string): Promise<Expense[]>;
+	 update(expense: Expense): Promise<Expense>;
 	 delete(id: string): Promise<void>;
 }

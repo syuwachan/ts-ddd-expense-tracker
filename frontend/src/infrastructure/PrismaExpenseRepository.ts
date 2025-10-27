@@ -4,7 +4,7 @@ import { ExpenseRepository } from "@/domain/repositories/ExpenseRepository";
 import { Expense } from "@/domain/entities/Expense";
 import { Money } from "@/domain/valueObjects/Money";
 import { DateValue } from "@/domain/valueObjects/DateValue";
-import { Category } from "@/domain/valueObjects/Category";
+import { Category, ExpenseCategoryType } from "@/domain/valueObjects/Category";
 import { Memo } from "@/domain/valueObjects/Memo";
 
 export class PrismaExpenseRepository implements ExpenseRepository {
@@ -23,7 +23,7 @@ export class PrismaExpenseRepository implements ExpenseRepository {
 			record.id,
 			new Money(record.amount),
 			new DateValue(record.date),
-			new Category(record.category),
+			new Category(record.category as ExpenseCategoryType),
 			new Memo(record.memo)
 		);
 	}
@@ -36,14 +36,13 @@ export class PrismaExpenseRepository implements ExpenseRepository {
 					r.id,
 					new Money(r.amount),
 					new DateValue(r.date),
-					new Category(r.category),
+					new Category(r.category as ExpenseCategoryType),
 					new Memo(r.memo)
 				)
 		);
 	}
 
 	async findByMonth(month: string): Promise<Expense[]> {
-		// month = "2025-10" の形式を想定
 		const start = new Date(`${month}-01`);
 		const end = new Date(start);
 		end.setMonth(end.getMonth() + 1);
@@ -64,13 +63,21 @@ export class PrismaExpenseRepository implements ExpenseRepository {
 					r.id,
 					new Money(r.amount),
 					new DateValue(r.date),
-					new Category(r.category),
+					new Category(r.category as ExpenseCategoryType),
 					new Memo(r.memo)
 				)
 		);
 	}
 
+	async update(expense: Expense): Promise<Expense> {
+		await prisma.expense.update({
+		  where: { id: expense.id },
+		  data: expense.toPersistence(),
+		});
+		return expense;
+	        }
+	        
 	async delete(id: string): Promise<void> {
-		await prisma.expense.delete({ where: { id } });
+		await prisma.expense.delete({ where: { id } });	
 	}
 }
